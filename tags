@@ -1,0 +1,55 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+CLEAN_QUERY	run_query.py	/^CLEAN_QUERY = "DROP TABLE %s;" % TMP_TABLE$/;"	v
+IMPALA_MAP	run_query.py	/^IMPALA_MAP = {'1a': QUERY_1_PRE, '1b': QUERY_1_PRE, '1c': QUERY_1_PRE,$/;"	v
+LOCAL_TMP_DIR	run_query.py	/^LOCAL_TMP_DIR = "\/tmp"$/;"	v
+QUERY_1_PRE	run_query.py	/^QUERY_1_PRE = "CREATE TABLE %s (pageURL STRING, pageRank INT);" % TMP_TABLE$/;"	v
+QUERY_1a_HQL	run_query.py	/^QUERY_1a_HQL = "SELECT pageURL, pageRank FROM rankings WHERE pageRank > 1000"$/;"	v
+QUERY_1a_SQL	run_query.py	/^QUERY_1a_SQL = QUERY_1a_HQL$/;"	v
+QUERY_1b_HQL	run_query.py	/^QUERY_1b_HQL = QUERY_1a_HQL.replace("1000", "100")$/;"	v
+QUERY_1b_SQL	run_query.py	/^QUERY_1b_SQL = QUERY_1b_HQL$/;"	v
+QUERY_1c_HQL	run_query.py	/^QUERY_1c_HQL = QUERY_1a_HQL.replace("1000", "10")$/;"	v
+QUERY_1c_SQL	run_query.py	/^QUERY_1c_SQL = QUERY_1c_HQL$/;"	v
+QUERY_2_PRE	run_query.py	/^QUERY_2_PRE = "CREATE TABLE %s (sourceIP STRING, adRevenue DOUBLE);" % TMP_TABLE$/;"	v
+QUERY_2a_HQL	run_query.py	/^                 "uservisits GROUP BY SUBSTR(sourceIP, 1, 8)"$/;"	v
+QUERY_2a_SQL	run_query.py	/^QUERY_2a_SQL = QUERY_2a_HQL.replace("SUBSTR", "SUBSTRING")$/;"	v
+QUERY_2b_HQL	run_query.py	/^QUERY_2b_HQL = QUERY_2a_HQL.replace("8", "10")$/;"	v
+QUERY_2b_SQL	run_query.py	/^QUERY_2b_SQL = QUERY_2b_HQL.replace("SUBSTR", "SUBSTRING")$/;"	v
+QUERY_2c_HQL	run_query.py	/^QUERY_2c_HQL = QUERY_2a_HQL.replace("8", "12")$/;"	v
+QUERY_2c_SQL	run_query.py	/^QUERY_2c_SQL = QUERY_2c_HQL.replace("SUBSTR", "SUBSTRING")$/;"	v
+QUERY_3_PRE	run_query.py	/^    "adRevenue DOUBLE, pageRank DOUBLE);" % TMP_TABLE$/;"	v
+QUERY_3a_HQL	run_query.py	/^QUERY_3a_HQL = " ".join(QUERY_3a_HQL.replace("\\n", "").split())$/;"	v
+QUERY_3a_SQL	run_query.py	/^QUERY_3a_SQL = " ".join(QUERY_3a_SQL.replace("\\n", "").split())$/;"	v
+QUERY_3b_HQL	run_query.py	/^QUERY_3b_HQL = QUERY_3a_HQL.replace("1980-04-01", "1983-01-01")$/;"	v
+QUERY_3b_SQL	run_query.py	/^QUERY_3b_SQL = QUERY_3a_SQL.replace("1980-04-01", "1983-01-01")$/;"	v
+QUERY_3c_HQL	run_query.py	/^QUERY_3c_HQL = QUERY_3a_HQL.replace("1980-04-01", "2010-01-01")$/;"	v
+QUERY_3c_SQL	run_query.py	/^QUERY_3c_SQL = QUERY_3a_SQL.replace("1980-04-01", "2010-01-01")$/;"	v
+QUERY_4_HQL	run_query.py	/^QUERY_4_HQL = " ".join(QUERY_4_HQL.replace("\\n", "").split())$/;"	v
+QUERY_4_HQL_HIVE_UDF	run_query.py	/^QUERY_4_HQL_HIVE_UDF = " ".join(QUERY_4_HQL_HIVE_UDF.replace("\\n", "").split())$/;"	v
+QUERY_MAP	run_query.py	/^QUERY_MAP = {$/;"	v
+SCALE_FACTOR_MAP	prepare_benchmark.py	/^SCALE_FACTOR_MAP = {$/;"	v
+TEZ_MAP	run_query.py	/^TEZ_MAP =    {'1a':(count(QUERY_1a_HQL),), '1b':(count(QUERY_1b_HQL),), '1c': (count(QUERY_1c_HQL),),$/;"	v
+TMP_TABLE	run_query.py	/^TMP_TABLE = "result"$/;"	v
+TMP_TABLE_CACHED	run_query.py	/^TMP_TABLE_CACHED = "result_cached"$/;"	v
+cmd	prepare_benchmark.py	/^def cmd(command):$/;"	f
+cmd	run_query.py	/^def cmd(command):$/;"	f
+count	run_query.py	/^def count(query):$/;"	f
+create_as	run_query.py	/^def create_as(query):$/;"	f
+cur_page	url_count.py	/^    cur_page = line.split(" ")[0]$/;"	v
+cur_page	url_count.py	/^cur_page = "NONE"$/;"	v
+insert_into	run_query.py	/^def insert_into(query):$/;"	f
+main	prepare_benchmark.py	/^def main():$/;"	f
+main	run_query.py	/^def main():$/;"	f
+make_input_cached	run_query.py	/^def make_input_cached(query):$/;"	f
+make_output_cached	run_query.py	/^def make_output_cached(query):$/;"	f
+parse_args	prepare_benchmark.py	/^def parse_args():$/;"	f
+parse_args	run_query.py	/^def parse_args():$/;"	f
+prepare_spark_sql	prepare_benchmark.py	/^def prepare_spark_sql(opts):$/;"	f
+run_spark_sql	run_query.py	/^def run_spark_sql(opts):$/;"	f
+url_count	url_count.py	/^    url_count = {}$/;"	v
+url_count	url_count.py	/^url_count = {}$/;"	v
+url_regex	url_count.py	/^url_regex = re.compile("(?P<url>https?:\/\/[^\\s]+)")$/;"	v
