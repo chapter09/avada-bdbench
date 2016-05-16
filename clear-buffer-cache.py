@@ -18,10 +18,11 @@
 # Clear OS buffer cache for mesos clusters on EC2.
 
 import os
+import sys
 import thread
 import time
 
-machinesFile = "/root/spark-ec2/slaves"
+machinesFile = sys.argv[1]
 machs = open(machinesFile).readlines()
 machs = map(lambda s: s.strip(),machs)
 machCount = len(machs)

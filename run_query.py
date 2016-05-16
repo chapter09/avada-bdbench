@@ -12,7 +12,7 @@ import multiprocessing
 from StringIO import StringIO
 
 # A scratch directory on your filesystem
-LOCAL_TMP_DIR = "/tmp"
+LOCAL_TMP_DIR = "./tmp"
 
 ### Benchmark Queries ###
 TMP_TABLE = "result"
@@ -156,39 +156,41 @@ def parse_args():
 	parser.add_argument("--spark-master", \
 			default=os.environ.get("SPARK_MASTER"), help="Address of Sparl master")
 
-	parser.add_option("-g", "--no-cache", action="store_true",
+	parser.add_argument("-r", "--restart", action="store_true",
+			default=False, help="Restart Spark")
+
+	parser.add_argument("-g", "--no-cache", action="store_true",
 			default=False, help="Disable caching in Spark")
-	parser.add_option("-t", "--reduce-tasks", type="int", default=150,
+	parser.add_argument("-t", "--reduce-tasks", type=int, default=150,
 			help="Number of reduce tasks in Spark")
-	parser.add_option("-z", "--clear-buffer-cache", action="store_true",
+	parser.add_argument("-z", "--clear-buffer-cache", action="store_true",
 			default=False, help="Clear disk buffer cache between query runs")
 
-	parser.add_option("--num-trials", type="int", default=10,
+	parser.add_argument("--num-trials", type=int, default=10,
 			help="Number of trials to run for this query")
-	parser.add_option("--prefix", type="string", default="",
+	parser.add_argument("--prefix", type=str, default="",
 			help="Prefix result files with this string")
 
-	parser.add_option("-q", "--query-num", default="1a",
+	parser.add_argument("-q", "--query-num", default="1a",
 			help="Which query to run in benchmark: " \
 					"%s" % ", ".join(QUERY_MAP.keys()))
 
 	opts = parser.parse_args()
 
-  if or opts.shark_host is None:
-    print >> stderr, \
-        "Spark-SQL requires identity file and hostname"
-    sys.exit(1)
-
-  if opts.query_num not in QUERY_MAP:
-    print >> stderr, "Unknown query number: %s" % opts.query_num
-    sys.exit(1)
-
-  return opts
+	## checking parameters
+	if opts.hdfs is None or opts.spark is None:
+		print >> stderr, "The script requires HADOOP_HOME and SPARK_HOME"
+		sys.exit(1)
+	
+	if opts.query_num not in QUERY_MAP:
+		print >> stderr, "Unknown query number: %s" % opts.query_num
+		sys.exit(1)
+	
+	return opts
 
 
 def cmd(command):
   return subprocess.check_call(command, shell=True)
-
 
 
 def run_spark_sql(opts):
@@ -196,28 +198,29 @@ def run_spark_sql(opts):
 	local_query_map = QUERY_MAP
 
 	prefix = str(time.time()).split(".")[0]
-	query_file_name = "%s_workload.sh" % prefix
+	query_file_name =	"%s_workload.sh" % prefix
 	local_query_file = os.path.join(LOCAL_TMP_DIR, query_file_name)
+	#local_query_file = "./workload/" + query_file_name
 	local_slaves_file = "%s/conf/slaves" % opts.spark
 	query_file = open(local_query_file, 'w')
-	remote_result_file = "/mnt/%s_results" % prefix
-	remote_tmp_file = "/mnt/%s_out" % prefix
-	remote_query_file = "/mnt/%s" % query_file_name
+	result_file = "./results/%s_results" % prefix
+	tmp_file = "./results/%s_out" % prefix
 
 	runner = "%s/bin/spark-sql --master %s" % (opts.spark, 
 			opts.spark_master)
 
 	print "Getting Slave List"
 	slaves = map(str.strip, filter(lambda x: not x.strip().startswith("#") \
-			and x.strip(), open(local_slaves_files).readline()))
+			and x.strip(), open(local_slaves_file).readline()))
 
-	print "Restarting standalone scheduler..."
-	cmd("%s/bin/stop-all.sh" % opts.spark)
-	ensure_spark_stopped_on_slaves(slaves)
-	time.sleep(30)
-	cmd("%s/bin/stop-all.sh" % opts.spark)
-	cmd("%s/bin/start-all.sh" % opts.spark)
-	time.sleep(10) 
+	if opts.restart:
+		print "Restarting standalone scheduler..."
+		cmd("%s/sbin/stop-all.sh" % opts.spark)
+		ensure_spark_stopped_on_slaves(slaves)
+		time.sleep(30)
+		cmd("%s/sbin/stop-all.sh" % opts.spark)
+		cmd("%s/sbin/start-all.sh" % opts.spark)
+		time.sleep(10) 
 
 	# Two modes here: Shark Mem and Shark Disk. If using Shark disk clear buffer
 	# cache in-between each query. If using Shark Mem, used cached tables.
@@ -239,11 +242,11 @@ def run_spark_sql(opts):
 		# Set up cached tables
 		if '4' in opts.query_num:
 			# Query 4 uses entirely different tables
-		 query_list += """
+			query_list += """
 									 DROP TABLE IF EXISTS documents_cached;
 									 CREATE TABLE documents_cached AS SELECT * FROM documents;
 									 """
-		 else:
+		else:
 			 query_list += """
 										 DROP TABLE IF EXISTS uservisits_cached;
 										 DROP TABLE IF EXISTS rankings_cached;
@@ -251,7 +254,7 @@ def run_spark_sql(opts):
 										 CREATE TABLE rankings_cached AS SELECT * FROM rankings;
 										 """
 
-		# Warm up for Query 1
+	# Warm up for Query 1
 	if '1' in opts.query_num:
 		query_list += "DROP TABLE IF EXISTS warmup;"
 		query_list += "CREATE TABLE warmup AS SELECT pageURL, pageRank FROM scratch WHERE pageRank > 1000;"
@@ -266,76 +269,88 @@ def run_spark_sql(opts):
 	print "\nQuery:"
 	print query_list.replace(';', ";\n")
 
-	 if opts.clear_buffer_cache:
-		 query_file.write("python /root/shark/bin/dev/clear-buffer-cache.py\n")
+	if opts.clear_buffer_cache:
+		query_file.write("python ./clear-buffer-cache.py %s\n" % local_slaves_file)
 
-	 query_file.write(
-			 "%s -e '%s' > %s 2>&1\n" % (runner, query_list, remote_tmp_file))
+	query_file.write("%s -e '%s' > %s 2>&1\n" % (
+		runner, query_list, tmp_file))
 
-	 query_file.write(
-			 "cat %s | grep Time | grep -v INFO |grep -v MapReduce >> %s\n" % (
-				 remote_tmp_file, remote_result_file))
+	query_file.write(
+			"cat %s | grep Time | grep -v INFO |grep -v MapReduce >> %s\n" % (
+				tmp_file, result_file))
+		
+	query_file.close()
+	cmd("chmod +x %s" % local_query_file)
 
-			 query_file.close()
+	# Run benchmark
+	print "Running remote benchmark..."
 
-	 # Run benchmark
-	 print "Running remote benchmark..."
+	# Collect results
+	results = []
+	contents = []
 
-	 # Collect results
-	 results = []
-	 contents = []
+	for i in range(opts.num_trials):
+		print "Stopping Executors on Slaves....."
+		ensure_spark_stopped_on_slaves(slaves)
+		print "Query %s : Trial %i" % (opts.query_num, i+1)
+		cmd("sh %s" % local_query_file)
+		content = open(result_file).readlines()
+		all_times = map(lambda x: float(x.split(": ")[1].split(" ")[0]), content)
 
-	 for i in range(opts.num_trials):
-		 print "Stopping Executors on Slaves....."
-		 ensure_spark_stopped_on_slaves(slaves)
-		 print "Query %s : Trial %i" % (opts.query_num, i+1)
-		 ssh_shark("%s" % remote_query_file)
-		 local_results_file = os.path.join(LOCAL_TMP_DIR, "%s_results" % prefix)
-		 scp_from(opts.shark_host, opts.shark_identity_file, "root",
-				 "/mnt/%s_results" % prefix, local_results_file)
-		 content = open(local_results_file).readlines()
-		 all_times = map(lambda x: float(x.split(": ")[1].split(" ")[0]), content)
+		if '4' in opts.query_num:
+			query_times = all_times[-4:]
+			part_a = query_times[1]
+			part_b = query_times[3]
+			print "Parts: %s, %s" % (part_a, part_b)
+			result = float(part_a) + float(part_b)
+		else:
+			result = all_times[-1] # Only want time of last query
 
-		 if '4' in opts.query_num:
-			 query_times = all_times[-4:]
-			 part_a = query_times[1]
-			 part_b = query_times[3]
-			 print "Parts: %s, %s" % (part_a, part_b)
-			 result = float(part_a) + float(part_b)
-		 else:
-			 result = all_times[-1] # Only want time of last query
+	print "Result: ", result
+	print "Raw Times: ", content
 
-		print "Result: ", result
-		print "Raw Times: ", content
+	results.append(result)
+	contents.append(content)
 
-		results.append(result)
-		contents.append(content)
+	# Clean-up
+	#ssh_shark("rm /mnt/%s*" % prefix)
+	print "Clean Up...."
+	#ssh_shark("rm /mnt/%s_results" % prefix)
+	#os.remove(results_file)
 
-		# Clean-up
-		#ssh_shark("rm /mnt/%s*" % prefix)
-		print "Clean Up...."
-		ssh_shark("rm /mnt/%s_results" % prefix)
-		os.remove(local_results_file)
-
-	os.remove(local_slaves_file)
-	os.remove(local_query_file)
+	#os.remove(local_slaves_file)
+	#os.remove(local_query_file)
 
 	return results, contents
 
 
+def ssh_ret_code(host, user, id_file, cmd):
+	try:
+		return ssh(host, user, id_file, cmd)
+	except subprocess.CalledProcessError as e:
+		return e.returncode
+
+
+# Run a command on a host through ssh, throwing an exception if ssh fails
+def ssh(host, command):
+	return subprocess.check_call(
+			"ssh -t -o StrictHostKeyChecking=no %s@%s '%s'" %
+			("ubuntu", host, command), shell=True)
+
+
 def ensure_spark_stopped_on_slaves(slaves):
-  stop = False
- while not stop:
-   command = "jps | grep ExecutorBackend"
-   ret_vals = map(lambda s: cmd(command), slaves)
-   print ret_vals
-   if 0 in ret_vals:
-     print "Spark is still running on some slaves... sleeping"
-     command = "jps | grep ExecutorBackend | cut -d \" \" -f 1 | xargs -rn1 kill -9"
-     map(lambda s: cmd(command), slaves)
-     time.sleep(2)
-   else:
-     stop = True
+	stop = False
+	while not stop:
+		cmd = "jps | grep ExecutorBackend"
+		ret_vals = map(lambda s: ssh_ret_code(s, cmd), slaves)
+		print ret_vals
+		if 0 in ret_vals:
+			print "Spark is still running on some slaves... sleeping"
+			cmd = "jps | grep ExecutorBackend | cut -d \" \" -f 1 | xargs -rn1 kill -9"
+			map(lambda s: ssh_ret_code(s, cmd), slaves)
+			time.sleep(2)
+		else:
+			stop = True
 
 
 def main():
