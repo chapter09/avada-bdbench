@@ -190,7 +190,7 @@ def parse_args():
 
 
 def cmd(command):
-  return subprocess.check_call(command, shell=True)
+	return subprocess.check_call(command, shell=True)
 
 
 def run_spark_sql(opts):
