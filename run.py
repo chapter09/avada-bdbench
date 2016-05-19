@@ -90,6 +90,8 @@ def run(opts):
 
 
 def collect():
+	# monitor files structure:
+	# /home/ubuntu/monitor/1463595917/hostname
 	pass
 
 
