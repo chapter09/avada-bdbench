@@ -2,6 +2,8 @@
 __author__  = "www.haow.ca"
 
 #require: ansible
+#Todo: refactor with ansible python lib
+#Todo: cleanup ansible processes when exceptional interrupt
 
 import os, sys
 import signal
@@ -15,10 +17,13 @@ BASE_DIR = "~/monitor/"
 def parse_args():
 	parser = ArgumentParser(usage="run.py [options]")
 
-	parser.add_argument("--host", dest="host", type=str,
+	parser.add_argument("--node", dest="node", type=str,
 			default="all", help="collect results from which host (default: all)")
 	parser.add_argument("-q", "--query-num", default="1a",
 			help="Which query to run in benchmark")
+	parser.add_argument("--hosts", dest="hosts", type=str, 
+			default="./conf/hosts", help=("Clust host list,"
+				" format: 10.2.3.4 hao-spark-1"))
 
 	opts = parser.parse_args()
 
@@ -38,15 +43,44 @@ def ansible_exe(host, command):
 
 
 def pre_run(opts, prefix):
-	# clean up SSH process
-
-	# create the monitor directory
-	cmd = "ansible %s -m shell -a \"mkdir -p %s/%s\"" % ( \
-			opts.host, BASE_DIR, prefix)
 	try:
-		execute(cmd)
+		# create local monitor directory
+		print "####Create local monitor directory####"
+		execute("mkdir -p "+BASE_DIR+prefix)
+		# create remote monitor directory
+		print "####Create remote monitor directory####"
+		ansible_exe(opts.node, "mkdir -p %s/%s/" % (
+			BASE_DIR, prefix))
 	except subprocess.CalledProcessError as e:
 		return e.returncode
+
+
+def post_run(opts, prefix):
+	# create a tar package to include results of this time
+	print "####Build packge of remote results####"
+	cmd = "tar -cf %s/%s/{{inventory_hostname}}.tar " % (BASE_DIR, prefix) \
+			+ "-C %s/ %s" % (BASE_DIR, prefix)
+	p = ansible_exe(opts.node, cmd)
+	p.wait()
+	
+	# remote fetch
+	print "####Fetch remote reulst packges####"
+	cmd = "src=%s%s/{{inventory_hostname}}.tar dest=%s%s/ " % (
+			BASE_DIR, prefix, BASE_DIR, prefix) + "flat=yes validate_checksum=no"
+	p = subprocess.Popen("ansible %s -m fetch -a \"%s\"" % (
+		opts.node, cmd), shell=True)
+	p.wait()
+
+	# local tar package extract
+	print "####Extract reulst packges####"
+	cmd = "cat %s%s/*.tar | tar -xf - -i -C %s%s/" % (
+			BASE_DIR, prefix, BASE_DIR, prefix)
+	execute(cmd)
+
+	# delete all tar packages
+	print "####Remote reulst tar packges####"
+	cmd = "rm %s%s/*.tar" % (BASE_DIR, prefix)
+	execute(cmd)
 
 
 def run(opts):
@@ -56,6 +90,7 @@ def run(opts):
 	monitor_proc = []
 
 	##Todo: remove hardcode
+	print "####Run Spark SQL query %s####" % opts.query_num
 	run_query = ("python run_query.py --hadoop ~/hadoop-2.6.4"
 		 " --spark ~/spark-1.6.1 --spark-master spark://10.2.3.4:7077"
 		 " -q %s --num-trials 1") % opts.query_num
@@ -75,29 +110,29 @@ def run(opts):
 			]
 
 	time.sleep(10)
-	print "Waiting for Spark SQL warming up..."
+	print "####Waiting for Spark SQL warming up...####"
 
 	for cmd in run_monitor:
 		print "Executing: \"%s\"" % cmd
-		monitor_proc.append(ansible_exe(opts.host, cmd))
+		monitor_proc.append(ansible_exe(opts.node, cmd))
 		time.sleep(1)
 
 	query_p.wait()
 
+	print "####Finish Spark SQL query####"
 	for p in monitor_proc:
 		print "Killing: \"%s\"" % run_monitor[monitor_proc.index(p)]
 		os.killpg(os.getpgid(p.pid), signal.SIGKILL)
 
 
-def collect():
-	# monitor files structure:
-	# /home/ubuntu/monitor/1463595917/hostname
-	pass
-
 
 def main():
 	opts = parse_args()
-	run(opts)
+	post_run(opts, "1463981418")
+	#try:
+	#  run(opts)
+	#except KeyboardInterrupt:
+	#  ansible_exe(opts.node, "sudo killall iostat nethogs jvmtop.sh")
 
 
 if __name__ == "__main__":

@@ -107,6 +107,10 @@ def parse(opts):
 	for d, sub_d, f_list in os.walk(opts.path):
 		if f_list:
 			for f in f_list:
+				fn, ext = os.path.splitext(f)
+				if "txt" in ext:
+					continue
+
 				in_fd = open(d+"/"+f)
 				out_fd = open(d+"/"+os.path.splitext(f)[0]+".txt", "w")
 
