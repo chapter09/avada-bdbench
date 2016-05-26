@@ -47,6 +47,7 @@ def parse_jvm(in_fd, out_fd):
 
 	for line in in_fd.readlines():
 		if pt_executor in line:
+			ext_id = line.split()[0].strip()
 			exe_mem = line.split()[2].strip()	
 			exe_cpu = line.split()[6].strip()	
 			exe_gc = line.split()[7].strip()	
@@ -54,6 +55,7 @@ def parse_jvm(in_fd, out_fd):
 			outline[1] = exe_cpu[:-1]
 			outline[2] = exe_gc[:-1]
 		elif pt_datanode in line:
+			dn_id = line.split()[0].strip()
 			dn_mem = line.split()[2].strip()	
 			dn_cpu = line.split()[6].strip()	
 			dn_gc = line.split()[7].strip()	
@@ -75,19 +77,20 @@ def parse_jvm(in_fd, out_fd):
 			else:
 				continue
 
+	return (ext_id, dn_id)
 
-def parse_net(in_fd, out_fd):
+def parse_net(in_fd, out_fd, ext_id, dn_id):
 	# output format:
 	# exe-snd exe-rev dn-snd dn-rev
 	# Todo: hardcode pid
 	outline = ["0"]*4
 	for line in in_fd.readlines():
-		if "27290" in line:
+		if ext_id in line:
 			exe_snd = line.split()[-2].strip()
 			exe_rev = line.split()[-1].strip()
 			outline[0] = exe_snd
 			outline[1] = exe_rev
-		elif "19633" in line:
+		elif dn_id in line:
 			dn_snd = line.split()[-2]
 			dn_rev = line.split()[-1]
 			outline[2] = dn_snd
@@ -106,10 +109,15 @@ def parse(opts):
 	# suppose the input directory is /monitor/146359****
 	for d, sub_d, f_list in os.walk(opts.path):
 		if f_list:
+			# iterate in the order of disk, jvmtop, net
+			f_list.sort()
+
 			for f in f_list:
-				fn, ext = os.path.splitext(f)
-				if "txt" in ext:
+				if f.startswith(".") or "txt" in f:
 					continue
+				#fn, ext = os.path.splitext(f)
+				#if "txt" in ext:
+				#  continue
 
 				in_fd = open(d+"/"+f)
 				out_fd = open(d+"/"+os.path.splitext(f)[0]+".txt", "w")
@@ -120,9 +128,9 @@ def parse(opts):
 				if "disk" in f:
 					parse_disk(in_fd, out_fd)
 				elif "jvm" in f:
-					parse_jvm(in_fd, out_fd)
+					ext_id, dn_id = parse_jvm(in_fd, out_fd)
 				elif "net" in f:
-					parse_net(in_fd, out_fd)
+					parse_net(in_fd, out_fd, ext_id, dn_id)
 				else:
 					print "Unkown file: %s" % (d+"/"+f)
 

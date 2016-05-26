@@ -49,8 +49,8 @@ def pre_run(opts, prefix):
 		execute("mkdir -p "+BASE_DIR+prefix)
 		# create remote monitor directory
 		print "####Create remote monitor directory####"
-		ansible_exe(opts.node, "mkdir -p %s/%s/" % (
-			BASE_DIR, prefix))
+		ansible_exe(opts.node, "mkdir -p %s/{{inventory_hostname}}" % (
+			BASE_DIR+prefix))
 	except subprocess.CalledProcessError as e:
 		return e.returncode
 
@@ -59,7 +59,7 @@ def post_run(opts, prefix):
 	# create a tar package to include results of this time
 	print "####Build packge of remote results####"
 	cmd = "tar -cf %s/%s/{{inventory_hostname}}.tar " % (BASE_DIR, prefix) \
-			+ "-C %s/ %s" % (BASE_DIR, prefix)
+			+ "-C %s/ {{inventory_hostname}}" % (BASE_DIR+prefix)
 	p = ansible_exe(opts.node, cmd)
 	p.wait()
 	
@@ -73,13 +73,13 @@ def post_run(opts, prefix):
 
 	# local tar package extract
 	print "####Extract reulst packges####"
-	cmd = "cat %s%s/*.tar | tar -xf - -i -C %s%s/" % (
-			BASE_DIR, prefix, BASE_DIR, prefix)
+	cmd = "cat %s/*.tar | tar -xf - -i -C %s/" % (
+			BASE_DIR+prefix, BASE_DIR+prefix)
 	execute(cmd)
 
 	# delete all tar packages
 	print "####Remote reulst tar packges####"
-	cmd = "rm %s%s/*.tar" % (BASE_DIR, prefix)
+	cmd = "rm %s/*.tar" % (BASE_DIR+prefix)
 	execute(cmd)
 
 
@@ -98,14 +98,14 @@ def run(opts):
 
 	run_monitor = [
 			#run_disk_monitor
-			"iostat -x 1 > %s/disk-query-%s.log" % (BASE_DIR+prefix, opts.query_num),		
+			"iostat -x 1 > %s/{{inventory_hostname}}/disk-query-%s.log" % (BASE_DIR+prefix, opts.query_num),		
 			#run_net_monitor
 			("export JAVA_HOME=/usr/lib/jvm/java-8-oracle/;"
-				"./jvmtop/jvmtop.sh > %s/jvmtop-query-%s.log") % (BASE_DIR+prefix, \
+				"./jvmtop/jvmtop.sh > %s/{{inventory_hostname}}/jvmtop-query-%s.log") % (BASE_DIR+prefix, \
 						opts.query_num),	
 			##Todo: hardcode eth0
 			#run_jvm_monitor
-			"sudo nethogs eth0 -t > %s/net-query-%s.log" % (BASE_DIR+prefix, \
+			"sudo nethogs eth0 -t > %s/{{inventory_hostname}}/net-query-%s.log" % (BASE_DIR+prefix, \
 					opts.query_num)
 			]
 
@@ -124,15 +124,16 @@ def run(opts):
 		print "Killing: \"%s\"" % run_monitor[monitor_proc.index(p)]
 		os.killpg(os.getpgid(p.pid), signal.SIGKILL)
 
+	post_run(opts, prefix)
 
 
 def main():
 	opts = parse_args()
-	post_run(opts, "1463981418")
-	#try:
-	#  run(opts)
-	#except KeyboardInterrupt:
-	#  ansible_exe(opts.node, "sudo killall iostat nethogs jvmtop.sh")
+	try:
+		run(opts)
+	except KeyboardInterrupt:
+		print "Ctrl-C interrupt, kill all monitoring processes"
+		ansible_exe(opts.node, "sudo killall iostat nethogs jvmtop.sh")
 
 
 if __name__ == "__main__":
