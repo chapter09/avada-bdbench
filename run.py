@@ -21,7 +21,7 @@ def parse_args():
 			default="all", help="collect results from which host (default: all)")
 	parser.add_argument("-q", "--query-num", default="1a",
 			help="Which query to run in benchmark")
-	parser.add_argument("-n", "--trial-num", default="11",
+	parser.add_argument("-n", "--trial-num", default="1",
 			help="Repeat times of executing query")
 	parser.add_argument("--hosts", dest="hosts", type=str, 
 			default="./conf/hosts", help=("Clust host list,"
