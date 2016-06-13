@@ -291,7 +291,7 @@ def run_spark_sql(opts):
 
 	for i in range(opts.num_trials):
 		print "Stopping Executors on Slaves....."
-		ensure_spark_stopped_on_slaves(slaves)
+		#ensure_spark_stopped_on_slaves(slaves)
 		print "Query %s : Trial %i" % (opts.query_num, i+1)
 		cmd("sh %s" % local_query_file)
 		content = open(result_file).readlines()
@@ -324,9 +324,9 @@ def run_spark_sql(opts):
 	return results, contents
 
 
-def ssh_ret_code(host, user, id_file, cmd):
+def ssh_ret_code(host, cmd):
 	try:
-		return ssh(host, user, id_file, cmd)
+		return ssh(host, cmd)
 	except subprocess.CalledProcessError as e:
 		return e.returncode
 

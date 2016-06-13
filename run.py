@@ -21,6 +21,8 @@ def parse_args():
 			default="all", help="collect results from which host (default: all)")
 	parser.add_argument("-q", "--query-num", default="1a",
 			help="Which query to run in benchmark")
+	parser.add_argument("-n", "--trial-num", default="11",
+			help="Repeat times of executing query")
 	parser.add_argument("--hosts", dest="hosts", type=str, 
 			default="./conf/hosts", help=("Clust host list,"
 				" format: 10.2.3.4 hao-spark-1"))
@@ -95,9 +97,8 @@ def run(opts):
 
 	##Todo: remove hardcode
 	print "####Run Spark SQL query %s####" % opts.query_num
-	run_query = ("python run_query.py --hadoop ~/hadoop-2.6.4"
-		 " --spark ~/spark-1.6.1 --spark-master spark://10.2.3.4:7077"
-		 " -q %s --num-trials 1") % opts.query_num
+	run_query = ("python run_query.py --hadoop ~/hadoop-2.6.4 --spark-master spark://ec2-54-209-49-134.compute-1.amazonaws.com:7077"
+		 " -q %s --num-trials %s") % (opts.query_num, opts.trial_num)
 	query_p = subprocess.Popen(run_query, shell=True)
 
 	run_monitor = [
