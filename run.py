@@ -77,6 +77,10 @@ def post_run(opts, prefix):
 			BASE_DIR+prefix, BASE_DIR+prefix)
 	execute(cmd)
 
+	# copy spark.log to direcotry
+	print "####Move spark.log to monitoring directory####"
+	execute("mv ~/logs/spark.log "+BASE_DIR+prefix+"/")
+
 	# delete all tar packages
 	print "####Remote reulst tar packges####"
 	cmd = "rm %s/*.tar" % (BASE_DIR+prefix)
@@ -98,15 +102,16 @@ def run(opts):
 
 	run_monitor = [
 			#run_disk_monitor
-			"iostat -x 1 > %s/{{inventory_hostname}}/disk-query-%s.log" % (BASE_DIR+prefix, opts.query_num),		
+			"iostat -x 1 > %s/{{inventory_hostname}}/disk-query-%s.log" % (
+				BASE_DIR+prefix, opts.query_num),		
 			#run_net_monitor
 			("export JAVA_HOME=/usr/lib/jvm/java-8-oracle/;"
-				"./jvmtop/jvmtop.sh > %s/{{inventory_hostname}}/jvmtop-query-%s.log") % (BASE_DIR+prefix, \
-						opts.query_num),	
+				"./jvmtop/jvmtop.sh > %s/{{inventory_hostname}}/jvmtop-query-%s.log") % 
+			(BASE_DIR+prefix, opts.query_num),	
 			##Todo: hardcode eth0
 			#run_jvm_monitor
-			"sudo nethogs eth0 -t > %s/{{inventory_hostname}}/net-query-%s.log" % (BASE_DIR+prefix, \
-					opts.query_num)
+			"sudo nethogs eth0 -t > %s/{{inventory_hostname}}/net-query-%s.log" % (
+				BASE_DIR+prefix, opts.query_num)
 			]
 
 	time.sleep(10)
