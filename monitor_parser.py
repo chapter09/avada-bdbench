@@ -13,9 +13,7 @@ import time, datetime
 
 def parse_args():
 	parser = ArgumentParser(usage="monitor_parser.py [options]")
-
 	parser.add_argument("-p", dest="path", type=str, help="Input directory")
-
 	opts = parser.parse_args()
 
 	if not opts.path:
@@ -76,8 +74,8 @@ def parse_jvm(in_fd, out_fd):
 				outline = [" "]*9
 			else:
 				continue
-
 	return (ext_id, dn_id)
+
 
 def parse_net(in_fd, out_fd, ext_id, dn_id):
 	# output format:
@@ -107,6 +105,8 @@ def parse_net(in_fd, out_fd, ext_id, dn_id):
 def parse(opts):
 	# walk through the directory
 	# suppose the input directory is /monitor/146359****
+	parse_log(opts)
+
 	for d, sub_d, f_list in os.walk(opts.path):
 		if f_list:
 			# iterate in the order of disk, jvmtop, net
