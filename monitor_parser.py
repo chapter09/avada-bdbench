@@ -4,16 +4,20 @@ __author__  = "www.haow.ca"
 # requirements: ansible
 
 import os, sys
+import re
 import signal
 from sys import stderr
 import subprocess
 from argparse import ArgumentParser
 import time, datetime
 
+MASTER=""
+WORKERS=[]
 
 def parse_args():
 	parser = ArgumentParser(usage="monitor_parser.py [options]")
 	parser.add_argument("-p", dest="path", type=str, help="Input directory")
+	parser.add_argument("--hosts", dest="hosts", type=str, help="Node list")
 	opts = parser.parse_args()
 
 	if not opts.path:
@@ -23,10 +27,74 @@ def parse_args():
 	return opts
 
 
+def to_epoch(date_str):
+	p = "%Y-%m-%d %H:%M:%S"
+	return int(time.mktime(time.strptime(date_str, p)))
+
+
+def parse_hosts(opts):
+	in_fd = open(opts.hosts)
+	flag_master = -1
+	flag_worker = 999
+	for i, line in enumerate(in_fd):
+		if line is None:
+			break
+		elif "master" in line:
+			flag_master = i
+		elif i == flag_master+1:
+			MASTER = line.split(" ")[0]
+		elif "worker" in line:
+			flag_worker = i
+		elif i > flag_worker:
+			WORKERS.append(line.split(" ")[0])
+	
+
+def parse_log(opts):
+	in_fd = open(opts.path+"/spark.log")
+	out_fds = {} 
+	for worker in WORKERS:
+		out_fds[worker.strip()] = open(
+				opts.path+"/task-%s.log"%worker.split(".")[0], 'w')
+  
+	visited = False
+	for line in in_fd.readlines():
+		if "Finished task" in line:
+			line_splitted = line.split(" ")
+			date = line_splitted[0]
+			time = line_splitted[1]
+			task_id = line_splitted[8]
+			stage_id = line_splitted[11]
+			t_cost = int(line_splitted[15])
+			host = line_splitted[18]
+      
+			start_time = to_epoch(date+" "+time) - t_cost/1000
+
+			if not visited:
+				base_time = start_time
+				start_time = 0
+				visited = True
+			else:
+			  start_time = start_time - base_time
+
+			finish_time = start_time + t_cost/1000
+			out_fds[host].write("%d\t%d\t%s\t%s\n"\
+					% (start_time, finish_time, task_id, stage_id)) 
+
+	in_fd.close()
+	for fd in out_fds.values():
+		fd.close()
+
+
 def parse_disk(in_fd, out_fd): 
 	for line in in_fd.readlines():
-		if line.startswith("vda"):
-			out_fd.write(line.split(" ")[-1].strip()+"\n")
+		disk_util = 0
+		util_1 = 0
+		util_2 = 0
+		if line.startswith("xvdb"):
+			util_1 = float(line.split(" ")[-1].strip())
+		if line.startswith("xvdc"):
+			util_2 = float(line.split(" ")[-1].strip())
+		out_fd.write("%d\n"%((util_1 + util_2)/2))
 
 
 def parse_jvm(in_fd, out_fd):
@@ -105,7 +173,8 @@ def parse_net(in_fd, out_fd, ext_id, dn_id):
 def parse(opts):
 	# walk through the directory
 	# suppose the input directory is /monitor/146359****
-	parse_log(opts)
+	parse_hosts(opts)
+	parse_log(opts) # read in spark.log and output task start/finish time
 
 	for d, sub_d, f_list in os.walk(opts.path):
 		if f_list:
@@ -140,7 +209,9 @@ def parse(opts):
 
 def main():
 	opts = parse_args()
-	parse(opts)
+	parse_hosts(opts)
+	parse_log(opts)
+	#parse(opts)
 
 
 if __name__ == "__main__":
