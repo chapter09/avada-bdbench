@@ -155,23 +155,28 @@ def parse_net(in_fd, out_fd, ext_id, dn_id):
 	# output format:
 	# exe-snd exe-rev dn-snd dn-rev
 	# Todo: hardcode pid
-	outline = ["0"]*4
+	outline = [0]*4
 	for line in in_fd.readlines():
 		if ext_id in line:
-			exe_snd = line.split()[-2].strip()
-			exe_rev = line.split()[-1].strip()
-			outline[0] = exe_snd
-			outline[1] = exe_rev
+			exe_snd = float(line.split()[-2].strip())
+			exe_rev = float(line.split()[-1].strip())
+			outline[0] += exe_snd
+			outline[1] += exe_rev
 		elif dn_id in line:
-			dn_snd = line.split()[-2]
-			dn_rev = line.split()[-1]
-			outline[2] = dn_snd
-			outline[3] = dn_rev
+			dn_snd = float(line.split()[-2])
+			dn_rev = float(line.split()[-1])
+			outline[2] += dn_snd
+			outline[3] += dn_rev
+		elif ":50010" in line:
+			dn_snd = float(line.split()[-2])
+			dn_rev = float(line.split()[-1])
+			outline[2] += dn_snd
+			outline[3] += dn_rev
 		elif not line.strip():
 			out_str = ",".join(map(str, outline))
 			if out_str.strip():
 				out_fd.write(out_str+"\n")
-				outline = ["0"]*4
+				outline = [0]*4
 			else:
 				continue
 		
@@ -192,7 +197,6 @@ def parse(opts):
 						or "txt" in f \
 						or "spark" in f \
 						or "task" in f:
-					print f
 					continue
 
 				in_fd = open(d+"/"+f)
