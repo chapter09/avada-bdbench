@@ -33,6 +33,7 @@ def to_epoch(date_str):
 
 
 def parse_hosts(opts):
+	print "### Parsing hosts ###"
 	in_fd = open(opts.hosts)
 	flag_master = -1
 	flag_worker = 999
@@ -50,6 +51,7 @@ def parse_hosts(opts):
 	
 
 def parse_log(opts):
+	print "### Parsing log ###"
 	in_fd = open(opts.path+"/spark.log")
 	out_fds = {} 
 	for worker in WORKERS:
@@ -86,6 +88,7 @@ def parse_log(opts):
 
 
 def parse_disk(in_fd, out_fd): 
+	print "### Parsing disk ###"
 	for line in in_fd.readlines():
 		disk_util = 0
 		util_1 = 0
@@ -98,12 +101,14 @@ def parse_disk(in_fd, out_fd):
 
 
 def parse_jvm(in_fd, out_fd):
+	print "### Parsing jvm ###"
 	# output format:
 	# exe-mem exe-cpu exe-gc data-mem data-cpu data-gc name-mem name-cpu name-gc
 	pt_executor = "ExecutorBackend"
 	pt_datanode = "tanode.DataNode"
 	pt_namenode = "tanode.NameNode"
-	
+	ext_id = dn_id = None
+
 	#header = ("exe-mem\t exe-cpu\t exe-gc\t"
 	#    "data-mem\t data-cpu\t data-gc\t"
 	#    "name-mem\t name-cpu\t name-gc\n")
@@ -146,6 +151,7 @@ def parse_jvm(in_fd, out_fd):
 
 
 def parse_net(in_fd, out_fd, ext_id, dn_id):
+	print "### Parsing net ###"
 	# output format:
 	# exe-snd exe-rev dn-snd dn-rev
 	# Todo: hardcode pid
@@ -182,11 +188,12 @@ def parse(opts):
 			f_list.sort()
 
 			for f in f_list:
-				if f.startswith(".") or "txt" in f:
+				if f.startswith(".") \
+						or "txt" in f \
+						or "spark" in f \
+						or "task" in f:
+					print f
 					continue
-				#fn, ext = os.path.splitext(f)
-				#if "txt" in ext:
-				#  continue
 
 				in_fd = open(d+"/"+f)
 				out_fd = open(d+"/"+os.path.splitext(f)[0]+".txt", "w")
@@ -198,7 +205,7 @@ def parse(opts):
 					parse_disk(in_fd, out_fd)
 				elif "jvm" in f:
 					ext_id, dn_id = parse_jvm(in_fd, out_fd)
-				elif "net" in f:
+				elif "net" in f and ext_id and dn_id:
 					parse_net(in_fd, out_fd, ext_id, dn_id)
 				else:
 					print "Unkown file: %s" % (d+"/"+f)
@@ -209,9 +216,9 @@ def parse(opts):
 
 def main():
 	opts = parse_args()
-	parse_hosts(opts)
-	parse_log(opts)
-	#parse(opts)
+	#parse_hosts(opts)
+	#parse_log(opts)
+	parse(opts)
 
 
 if __name__ == "__main__":
