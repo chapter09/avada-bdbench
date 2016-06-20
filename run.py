@@ -12,7 +12,7 @@ from argparse import ArgumentParser
 import time, datetime
 
 BASE_DIR = "~/monitor/"
-
+MASTER = ""
 
 def parse_args():
 	parser = ArgumentParser(usage="run.py [options]")
@@ -97,8 +97,8 @@ def run(opts):
 
 	##Todo: remove hardcode
 	print "####Run Spark SQL query %s####" % opts.query_num
-	run_query = ("python run_query.py --hadoop ~/hadoop-2.6.4 --spark-master spark://ec2-54-209-49-134.compute-1.amazonaws.com:7077"
-		 " -q %s --num-trials %s") % (opts.query_num, opts.trial_num)
+	run_query = ("python run_query.py --spark-master %s:7077"
+		 " -q %s --num-trials %s") % (MASTER, opts.query_num, opts.trial_num)
 	query_p = subprocess.Popen(run_query, shell=True)
 
 	run_monitor = [
@@ -110,6 +110,9 @@ def run(opts):
 				"./jvmtop/jvmtop.sh > %s/{{inventory_hostname}}/jvmtop-query-%s.log") % 
 			(BASE_DIR+prefix, opts.query_num),	
 			##Todo: hardcode eth0
+			#run_disk_monitor
+			"sudo iftop -t > %s/{{inventory_hostname}}/iftop-query-%s.log" % (
+				BASE_DIR+prefix, opts.query_num),		
 			#run_jvm_monitor
 			"sudo nethogs eth0 -t > %s/{{inventory_hostname}}/net-query-%s.log" % (
 				BASE_DIR+prefix, opts.query_num)
