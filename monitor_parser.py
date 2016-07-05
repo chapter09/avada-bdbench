@@ -16,6 +16,7 @@ import numpy as np
 
 WORKERS = []
 MASTER = ''
+JOB = ''
 
 
 def parse_args():
@@ -73,6 +74,7 @@ def parse_log(exp_path, opts):
                                              quotechar='|',
                                              lineterminator="\n",
                                              quoting=csv.QUOTE_MINIMAL)
+
     visited = False
     for line in in_fd.readlines():
         if "Finished task" in line:
@@ -110,9 +112,11 @@ def parse_log(exp_path, opts):
         for t in range(0, longest_time + 1):
             counter += tasks_array[:, 0].tolist().count(t)
             counter -= tasks_array[:, 1].tolist().count(t)
+
             csv_num[worker].writerow([counter])
             if t == longest_time:
                 break
+
 
     in_fd.close()
     for fd in out_fds:
@@ -174,7 +178,7 @@ def parse_jvm(in_fd, out_fd):
         # 	outline[7] = nd_cpu[:-1]
         # 	outline[8] = nd_gc[:-1]
         elif not line.strip():
-            out_str = ",".join(map(str, outline))
+            out_str = " ".join(map(str, outline))
             if out_str.strip():
                 out_fd.writerow(outline)
                 outline = [" "] * 6
@@ -220,6 +224,7 @@ def parse(exp_path, opts):
     parse_hosts(opts)
     # read in spark.log and output task start/finish time
     parse_log(exp_path, opts)
+    global JOB
 
     for d, sub_d, f_list in os.walk(exp_path):
         if f_list:
@@ -230,7 +235,8 @@ def parse(exp_path, opts):
                 if f.startswith(".") \
                     or "txt" in f \
                     or "spark" in f \
-                        or "task" in f:
+                    or "task" in f\
+                    or "csv" in f:
                     continue
 
                 in_fd = open(d + "/" + f)
@@ -240,10 +246,11 @@ def parse(exp_path, opts):
                                         lineterminator="\n",
                                         quoting=csv.QUOTE_MINIMAL)
 
-                print "Parsing %s" % (d + "/" + f)
-                print "Creating %s" % (d + "/" + os.path.splitext(f)[0] + ".txt")
+                # print "Parsing %s" % (d + "/" + f)
+                # print "Creating %s" % (d + "/" + os.path.splitext(f)[0] + ".txt")
 
                 if "disk" in f:
+                    JOB = f.split('.')[0].split('-')[-1]
                     parse_disk(in_fd, csv_writer)
                 elif "jvm" in f:
                     ext_id, dn_id = parse_jvm(in_fd, csv_writer)
@@ -256,37 +263,47 @@ def parse(exp_path, opts):
                 out_fd.close()
 
 
-def csv_merge(exp_path, file_list):
+def csv_merge(exp_path, file_list, out_fn):
     csv_file_list = " ".join(map(str, file_list))
 
-    subprocess.Popen("paste -d ',' %s > " % csv_file_list,
+    subprocess.Popen("paste -d ',' %s > %s" % (csv_file_list, out_fn),
                      shell=True,
                      cwd=exp_path)
 
 
 def merge(exp_path, opts):
-    
-
-
+    time_stamp = exp_path[-10:]
     for worker in WORKERS:
-        pass
+        disk_csv = os.path.join(
+            exp_path, worker + "/disk-query-" + JOB + ".csv")
+        jvm_csv = os.path.join(
+            exp_path, worker + "/jvmtop-query-" + JOB + ".csv")
+        net_csv = os.path.join(exp_path, worker + "/net-query-" + JOB + ".csv")
+        task_csv = exp_path + "/num-" + worker.split(".")[0] + ".csv"
+
+        file_list = (disk_csv, jvm_csv, net_csv, task_csv)
+        out_fn = os.path.join(path.abspath(opts.path), r"results/") \
+            + time_stamp + '-' + worker.split(".")[0] + "-" + JOB + ".csv"
+
+        csv_merge(exp_path, file_list, out_fn)
 
 
 def main():
     opts = parse_args()
-    parse_hosts(opts)
+
+    if not path.exists(os.path.join(path.abspath(opts.path), r"results/")):
+        os.mkdir(os.path.join(path.abspath(opts.path), r"results/"))
 
     for d in os.listdir(opts.path):
+        if 'results' in d:
+            continue
         if os.path.isdir(os.path.join(opts.path, d)):
-            # 		print "#### Parsing " + d + " ####"
-            # 		parse(path.abspath(path.join(opts.path, d)), opts)
-            parse_log(path.abspath(path.join(opts.path, d)), opts)
-    # 		print "#### Merging " + d + " ####"
-            # merge(path.abspath(path.join(opts.path, d)), opts)
-
-    # parse_log(opts)
-    # parse(opts)
-
+            # parse_hosts(opts)
+            # parse_log(path.abspath(path.join(opts.path, d)), opts)
+            print "#### Parsing " + d + " ####"
+            parse(path.abspath(path.join(opts.path, d)), opts)
+            print "#### Merging " + d + " ####"
+            merge(path.abspath(path.join(opts.path, d)), opts)
 
 if __name__ == "__main__":
     main()
