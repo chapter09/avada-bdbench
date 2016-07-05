@@ -221,7 +221,6 @@ def parse_net(in_fd, out_fd, ext_id, dn_id):
 def parse(exp_path, opts):
     # walk through the directory
     # suppose the input directory is /monitor/146359****
-    parse_hosts(opts)
     # read in spark.log and output task start/finish time
     parse_log(exp_path, opts)
     global JOB
@@ -266,9 +265,25 @@ def parse(exp_path, opts):
 def csv_merge(exp_path, file_list, out_fn):
     csv_file_list = " ".join(map(str, file_list))
 
-    subprocess.Popen("paste -d ',' %s > %s" % (csv_file_list, out_fn),
+    p = subprocess.Popen("paste -d ',' %s > %s" % (csv_file_list, out_fn),
                      shell=True,
                      cwd=exp_path)
+    p.wait()
+
+
+def trim(in_f):
+    in_fd = open(in_f)
+    flag = -1
+    lines = in_fd.readlines()
+    in_fd.close()
+    for i, line in enumerate(lines):
+        length = len(line.split(','))
+        if length != 12:
+            flag = i
+            break
+    out_fd = open(in_f, 'w')
+    out_fd.writelines(lines[:flag+1])
+    out_fd.close()
 
 
 def merge(exp_path, opts):
@@ -286,6 +301,7 @@ def merge(exp_path, opts):
             + time_stamp + '-' + worker.split(".")[0] + "-" + JOB + ".csv"
 
         csv_merge(exp_path, file_list, out_fn)
+        trim(out_fn)
 
 
 def main():
@@ -294,6 +310,7 @@ def main():
     if not path.exists(os.path.join(path.abspath(opts.path), r"results/")):
         os.mkdir(os.path.join(path.abspath(opts.path), r"results/"))
 
+    parse_hosts(opts)
     for d in os.listdir(opts.path):
         if 'results' in d:
             continue
