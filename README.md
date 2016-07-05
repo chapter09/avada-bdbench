@@ -12,4 +12,4 @@ Scripts for running Big Data Benchmark on existing Spark SQL cluster
     python run.py -q 1a 
     
 ### How to parse the results
-    python monitor_parser.py -p /path/to/monitor/1465868995/
+    python monitor_parser.py -p /path/to/monitor/
