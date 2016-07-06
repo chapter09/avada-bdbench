@@ -117,6 +117,7 @@ def parse_log(exp_path, opts):
             if t == longest_time:
                 break
 
+
     in_fd.close()
     for fd in out_fds:
         fd.close()
@@ -234,7 +235,7 @@ def parse(exp_path, opts):
                     or "txt" in f \
                     or "spark" in f \
                     or "task" in f\
-                        or "csv" in f:
+                    or "csv" in f:
                     continue
 
                 in_fd = open(d + "/" + f)
@@ -245,8 +246,7 @@ def parse(exp_path, opts):
                                         quoting=csv.QUOTE_MINIMAL)
 
                 # print "Parsing %s" % (d + "/" + f)
-                # print "Creating %s" % (d + "/" + os.path.splitext(f)[0] +
-                # ".txt")
+                # print "Creating %s" % (d + "/" + os.path.splitext(f)[0] + ".txt")
 
                 if "disk" in f:
                     JOB = f.split('.')[0].split('-')[-1]
@@ -266,8 +266,8 @@ def csv_merge(exp_path, file_list, out_fn):
     csv_file_list = " ".join(map(str, file_list))
 
     p = subprocess.Popen("paste -d ',' %s > %s" % (csv_file_list, out_fn),
-                         shell=True,
-                         cwd=exp_path)
+                     shell=True,
+                     cwd=exp_path)
     p.wait()
 
 
@@ -282,7 +282,7 @@ def trim(in_f):
             flag = i
             break
     out_fd = open(in_f, 'w')
-    out_fd.writelines(lines[:flag + 1])
+    out_fd.writelines(lines[:flag])
     out_fd.close()
 
 
