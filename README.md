@@ -1,4 +1,4 @@
-# bdbench_spark_sql
+# avada-bdbench
 Scripts for running Big Data Benchmark on existing Spark SQL cluster
 
 ### Requirements
