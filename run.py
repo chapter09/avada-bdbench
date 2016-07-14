@@ -14,7 +14,7 @@ import time
 import datetime
 
 BASE_DIR = "~/monitor/"
-MASTER = ""
+MASTER = "spark://ec2-54-226-75-109.compute-1.amazonaws.com"
 
 
 def parse_args():

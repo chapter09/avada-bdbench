@@ -1,0 +1,20 @@
+# vim:ft=ansible:
+---
+# This Playbook will install necessary toolkit for experiments 
+
+- hosts: all
+  remote_user: ubuntu 
+  tasks:
+    - name: Install redis-server
+      apt: name=redis-server
+      become: yes
+
+    - name: Install redis-tools
+      apt: name=redis-tools
+      become: yes
+
+    - name: Launch redis-server
+      shell: "redis-server &"
+
+    - name: Git clone avada-ML
+      git: repo=git@github.com:chapter09/avada-ML.git
