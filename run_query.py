@@ -255,16 +255,16 @@ def run_spark_sql(opts):
         if '4' in opts.query_num:
             # Query 4 uses entirely different tables
             query_list += """
-									 DROP TABLE IF EXISTS documents_cached;
-									 CREATE TABLE documents_cached AS SELECT * FROM documents;
-									 """
+                                     DROP TABLE IF EXISTS documents_cached;
+                                     CREATE TABLE documents_cached AS SELECT * FROM documents;
+                                     """
         else:
             query_list += """
-										 DROP TABLE IF EXISTS uservisits_cached;
-										 DROP TABLE IF EXISTS rankings_cached;
-										 CREATE TABLE uservisits_cached AS SELECT * FROM uservisits;
-										 CREATE TABLE rankings_cached AS SELECT * FROM rankings;
-										 """
+                                         DROP TABLE IF EXISTS uservisits_cached;
+                                         DROP TABLE IF EXISTS rankings_cached;
+                                         CREATE TABLE uservisits_cached AS SELECT * FROM uservisits;
+                                         CREATE TABLE rankings_cached AS SELECT * FROM rankings;
+                                         """
 
     # Warm up for Query 1
     if '1' in opts.query_num:
@@ -368,6 +368,9 @@ def ensure_spark_stopped_on_slaves(slaves):
 
 
 def main():
+    if not os.path.exists("./tmp/"):
+        os.mkdir("./tmp/")
+
     opts = parse_args()
     run_spark_sql(opts)
 
