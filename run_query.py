@@ -112,9 +112,11 @@ IMPALA_MAP = {'1a': QUERY_1_PRE, '1b': QUERY_1_PRE, '1c': QUERY_1_PRE,
               '2a': QUERY_2_PRE, '2b': QUERY_2_PRE, '2c': QUERY_2_PRE,
               '3a': QUERY_3_PRE, '3b': QUERY_3_PRE, '3c': QUERY_3_PRE}
 
-TEZ_MAP = {'1a': (count(QUERY_1a_HQL),), '1b': (count(QUERY_1b_HQL),), '1c': (count(QUERY_1c_HQL),),
-           '2a': (count(QUERY_2a_HQL),), '2b': (count(QUERY_2b_HQL),), '2c': (count(QUERY_2c_HQL),),
-           '3a': (count(QUERY_3a_HQL),), '3b': (count(QUERY_3b_HQL),), '3c': (count(QUERY_3c_HQL),)}
+TEZ_MAP = {'1a': (count(QUERY_1a_HQL),), '1b': (count(QUERY_1b_HQL),),
+           '1c': (count(QUERY_1c_HQL),), '2a': (count(QUERY_2a_HQL),),
+           '2b': (count(QUERY_2b_HQL),), '2c': (count(QUERY_2c_HQL),),
+           '3a': (count(QUERY_3a_HQL),), '3b': (count(QUERY_3b_HQL),),
+           '3c': (count(QUERY_3c_HQL),)}
 
 QUERY_MAP = {
     '1a':  (create_as(QUERY_1a_HQL), insert_into(QUERY_1a_HQL),
@@ -161,11 +163,14 @@ def parse_args():
     parser = ArgumentParser(usage="run_query.py [options]")
 
     parser.add_argument("--hadoop", dest="hdfs",
-                        default=os.environ.get("HADOOP_HOME"), help="Path of HADOOP_HOME")
+                        default=os.environ.get("HADOOP_HOME"),
+                        help="Path of HADOOP_HOME")
     parser.add_argument("--spark",
-                        default=os.environ.get("SPARK_HOME"), help="Path of SPARK_HOME")
+                        default=os.environ.get("SPARK_HOME"),
+                        help="Path of SPARK_HOME")
     parser.add_argument("--spark-master",
-                        default=os.environ.get("SPARK_MASTER"), help="Address of Sparl master")
+                        default=os.environ.get("SPARK_MASTER"),
+                        help="Address of Sparl master")
 
     parser.add_argument("-r", "--restart", action="store_true",
                         default=False, help="Restart Spark")
@@ -175,7 +180,8 @@ def parse_args():
     parser.add_argument("-t", "--reduce-tasks", type=int, default=150,
                         help="Number of reduce tasks in Spark")
     parser.add_argument("-z", "--clear-buffer-cache", action="store_true",
-                        default=False, help="Clear disk buffer cache between query runs")
+                        default=False,
+                        help="Clear disk buffer cache between query runs")
 
     parser.add_argument("--num-trials", type=int, default=10,
                         help="Number of trials to run for this query")
@@ -222,7 +228,8 @@ def run_spark_sql(opts):
 
     print "Getting Slave List"
     slaves = map(str.strip, filter(lambda x: not x.strip().startswith("#")
-                                   and x.strip(), open(local_slaves_file).readline()))
+                                   and x.strip(), \
+                                   open(local_slaves_file).readline()))
 
     if opts.restart:
         print "Restarting standalone scheduler..."
@@ -255,21 +262,22 @@ def run_spark_sql(opts):
         if '4' in opts.query_num:
             # Query 4 uses entirely different tables
             query_list += """
-									 DROP TABLE IF EXISTS documents_cached;
-									 CREATE TABLE documents_cached AS SELECT * FROM documents;
-									 """
+             DROP TABLE IF EXISTS documents_cached;
+             CREATE TABLE documents_cached AS SELECT * FROM documents;
+             """
         else:
             query_list += """
-										 DROP TABLE IF EXISTS uservisits_cached;
-										 DROP TABLE IF EXISTS rankings_cached;
-										 CREATE TABLE uservisits_cached AS SELECT * FROM uservisits;
-										 CREATE TABLE rankings_cached AS SELECT * FROM rankings;
-										 """
+             DROP TABLE IF EXISTS uservisits_cached;
+             DROP TABLE IF EXISTS rankings_cached;
+             CREATE TABLE uservisits_cached AS SELECT * FROM uservisits;
+             CREATE TABLE rankings_cached AS SELECT * FROM rankings;
+             """
 
     # Warm up for Query 1
     if '1' in opts.query_num:
         query_list += "DROP TABLE IF EXISTS warmup;"
-        query_list += "CREATE TABLE warmup AS SELECT pageURL, pageRank FROM scratch WHERE pageRank > 1000;"
+        query_list += "CREATE TABLE warmup AS SELECT pageURL, "
+        + "pageRank FROM scratch WHERE pageRank > 1000;"
 
     if '4' not in opts.query_num:
         query_list += local_clean_query
@@ -360,7 +368,8 @@ def ensure_spark_stopped_on_slaves(slaves):
         print ret_vals
         if 0 in ret_vals:
             print "Spark is still running on some slaves... sleeping"
-            cmd = "jps | grep ExecutorBackend | cut -d \" \" -f 1 | xargs -rn1 kill -9"
+            cmd = "jps | grep ExecutorBackend"
+            + " | cut -d \" \" -f 1 | xargs -rn1 kill -9"
             map(lambda s: ssh_ret_code(s, cmd), slaves)
             time.sleep(2)
         else:
@@ -368,6 +377,9 @@ def ensure_spark_stopped_on_slaves(slaves):
 
 
 def main():
+    if not os.path.exists("./tmp/"):
+        os.mkdir("./tmp/")
+
     opts = parse_args()
     run_spark_sql(opts)
 
