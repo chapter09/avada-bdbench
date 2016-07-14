@@ -129,6 +129,7 @@ def parse_disk(in_fd, out_fd):
         disk_util = 0
         util_1 = 0
         util_2 = 0
+		# Todo: hardcode
         if line.startswith("xvdb"):
             util_1 = float(line.split(" ")[-1].strip())
         if line.startswith("xvdc"):
