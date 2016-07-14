@@ -68,26 +68,26 @@ def prepare_spark_sql(opts):
         try:
             cmd("%s/bin/hdfs dfs -mkdir /user/shark/benchmark", opts.hdfs)
         except Exception:
-            pass  # Folder may already exist
+            pass  # Folder may already exist        
 
         cmd("%s/bin/hadoop distcp "
-            "s3n://big-data-benchmark/pavlo/%s/%s/rankings/ "
-            "/user/shark/benchmark/rankings/" % (
+					 "s3n://big-data-benchmark/pavlo/%s/%s/rankings/ "
+					 "/user/shark/benchmark/" % (
+							 opts.hdfs, opts.file_format, opts.data_prefix))
+
+        cmd("%s/bin/hadoop distcp "
+            "s3n://big-data-benchmark/pavlo/%s/%s/crawl/ "
+            "/user/shark/benchmark/" % (
                 opts.hdfs, opts.file_format, opts.data_prefix))
 
         cmd("%s/bin/hadoop distcp "
             "s3n://big-data-benchmark/pavlo/%s/%s/uservisits/ "
-            "/user/shark/benchmark/uservisits/" % (
-                opts.hdfs, opts.file_format, opts.data_prefix))
-
-        cmd("%s/bin/hadoop distcp "
-            "s3n://big-data-benchmark/pavlo/%s/%s/crawl/ "
-            "/user/shark/benchmark/crawl/" % (
+            "/user/shark/benchmark/" % (
                 opts.hdfs, opts.file_format, opts.data_prefix))
 
         # Scratch table used for JVM warmup
         cmd("%s/bin/hadoop distcp /user/shark/benchmark/rankings "
-            "/user/shark/benchmark/scratch" % opts.hdfs)
+            "/user/shark/benchmark/" % opts.hdfs)
 
         print "=== CREATING HIVE TABLES FOR BENCHMARK ==="
 
