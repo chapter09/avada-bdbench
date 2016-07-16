@@ -276,7 +276,7 @@ def run_spark_sql(opts):
     # Warm up for Query 1
     if '1' in opts.query_num:
         query_list += "DROP TABLE IF EXISTS warmup;"
-        query_list += "CREATE TABLE warmup AS SELECT pageURL, "
+        query_list += "CREATE TABLE warmup AS SELECT pageURL, " \
         + "pageRank FROM scratch WHERE pageRank > 1000;"
 
     if '4' not in opts.query_num:
