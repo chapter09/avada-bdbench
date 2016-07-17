@@ -68,7 +68,7 @@ def prepare_spark_sql(opts):
         try:
             cmd("%s/bin/hdfs dfs -mkdir /user/shark/benchmark", opts.hdfs)
         except Exception:
-            pass  # Folder may already exist        
+            pass  # Folder may already exist
 
 		cmd("%s/bin/hadoop distcp "
 			"s3n://big-data-benchmark/pavlo/%s/%s/rankings/ "
