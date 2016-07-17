@@ -70,6 +70,7 @@ def prepare_spark_sql(opts):
         except Exception:
             pass  # Folder may already exist        
 
+<<<<<<< HEAD:prepare_benchmark.py
 		cmd("%s/bin/hadoop distcp "
 			   "s3n://big-data-benchmark/pavlo/%s/%s/rankings/ "
 			   "/user/shark/benchmark/" % (
