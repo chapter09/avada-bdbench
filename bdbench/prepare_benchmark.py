@@ -71,9 +71,9 @@ def prepare_spark_sql(opts):
             pass  # Folder may already exist        
 
         cmd("%s/bin/hadoop distcp "
-					 "s3n://big-data-benchmark/pavlo/%s/%s/rankings/ "
-					 "/user/shark/benchmark/" % (
-							 opts.hdfs, opts.file_format, opts.data_prefix))
+            "s3n://big-data-benchmark/pavlo/%s/%s/rankings/ "
+            "/user/shark/benchmark/" % (
+                opts.hdfs, opts.file_format, opts.data_prefix))
 
         cmd("%s/bin/hadoop distcp "
             "s3n://big-data-benchmark/pavlo/%s/%s/crawl/ "
