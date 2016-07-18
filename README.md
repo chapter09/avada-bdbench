@@ -13,3 +13,7 @@ Scripts for running Big Data Benchmark on existing Spark SQL cluster
     
 ### How to parse the results
     python monitor_parser.py -p /path/to/monitor/
+
+
+    sudo apt-get install byacc flex
+

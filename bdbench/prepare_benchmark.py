@@ -80,14 +80,14 @@ def prepare_spark_sql(opts):
             "/user/shark/benchmark/" % (
                 opts.hdfs, opts.file_format, opts.data_prefix))
 
-        cmd("%s/bin/hadoop distcp "
-            "s3n://big-data-benchmark/pavlo/%s/%s/uservisits/ "
-            "/user/shark/benchmark/" % (
+        cmd("%s/bin/hadoop distcp " \
+            "s3n://big-data-benchmark/pavlo/%s/%s/uservisits/ " \
+            "/user/shark/benchmark/" % ( \
                 opts.hdfs, opts.file_format, opts.data_prefix))
 
         # Scratch table used for JVM warmup
-        cmd("%s/bin/hadoop distcp /user/shark/benchmark/rankings "
-            "/user/shark/benchmark/" % opts.hdfs)
+        cmd("%s/bin/hadoop distcp /user/shark/benchmark/rankings/ " \
+            "/user/shark/benchmark/scratch/" % opts.hdfs)
 
         print "=== CREATING HIVE TABLES FOR BENCHMARK ==="
 
