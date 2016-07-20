@@ -5,18 +5,17 @@
 - hosts: worker
   remote_user: ubuntu 
   tasks:
-    #- name: Install redis-server
-    #  apt: name=redis-server
-    #  become: yes
-
-    #- name: Install redis-tools
-    #  apt: name=redis-tools
-    #  become: yes
-
     - name: Launch redis-server
       shell: "redis-server &"
+      async: 45
+      poll: 0
 
     - name: Copy monitoring daemon
       copy: src=/home/ubuntu/avada-ML/monitor_daemon.py 
             dest=/home/ubuntu/ 
             mode=750
+
+    - name: Flush local redis data
+      shell: "redis-cli flushall"
+      async: 45
+      poll: 0
