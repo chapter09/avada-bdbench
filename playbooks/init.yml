@@ -13,8 +13,10 @@
     #  apt: name=redis-tools
     #  become: yes
 
-    #- name: Launch redis-server
-    #  shell: "redis-server &"
+    - name: Launch redis-server
+      shell: "redis-server &"
 
-    - name: Git clone avada-ML
-      git: repo=git@github.com:chapter09/avada-ML.git dest=/home/ubuntu/avada-ML accept_hostkey=yes
+    - name: Copy monitoring daemon
+      copy: src=/home/ubuntu/avada-ML/monitor_daemon.py 
+            dest=/home/ubuntu/ 
+            mode=750
