@@ -2,11 +2,14 @@
 ---
 # This Playbook will install necessary toolkit for experiments 
 
-- hosts: all
+- hosts: worker
   remote_user: ubuntu 
   tasks:
-    - name: Launch redis-server
-      shell: "redis-server &"
+    #- name: Launch redis-server
+    #  shell: "redis-server &"
+    - name: Install daemon
+      apt: name=daemon
+      become: yes
 
-    - name: Git clone avada-ML
-      git: repo=git@github.com:chapter09/avada-ML.git
+    #- name: Git clone avada-ML
+    #  git: repo=git@github.com:chapter09/avada-ML.git dest=/home/ubuntu/avada-ML accept_hostkey=yes
