@@ -68,56 +68,55 @@ def prepare_spark_sql(opts):
         try:
             cmd("%s/bin/hdfs dfs -mkdir /user/shark/benchmark", opts.hdfs)
         except Exception:
-            pass  # Folder may already exist
+            pass  # Folder may already exist        
 
         cmd("%s/bin/hadoop distcp " \
-               "s3n://big-data-benchmark/pavlo/%s/%s/rankings/ " \
-               "/user/shark/benchmark/" % ( \
-               opts.hdfs, opts.file_format, opts.data_prefix))
+            "s3n://big-data-benchmark/pavlo/%s/%s/rankings/ " \
+            "/user/shark/benchmark/" % ( \
+                opts.hdfs, opts.file_format, opts.data_prefix))
 
         cmd("%s/bin/hadoop distcp " \
-               "s3n://big-data-benchmark/pavlo/%s/%s/crawl/ " \
-               "/user/shark/benchmark/" % ( \
-                   opts.hdfs, opts.file_format, opts.data_prefix))
+            "s3n://big-data-benchmark/pavlo/%s/%s/crawl/ " \
+            "/user/shark/benchmark/" % ( \
+                opts.hdfs, opts.file_format, opts.data_prefix))
 
         cmd("%s/bin/hadoop distcp " \
-               "s3n://big-data-benchmark/pavlo/%s/%s/uservisits/ " \
-               "/user/shark/benchmark/scratch" % ( \
-                   opts.hdfs, opts.file_format, opts.data_prefix))
+            "s3n://big-data-benchmark/pavlo/%s/%s/uservisits/ " \
+            "/user/shark/benchmark/" % ( \
+                opts.hdfs, opts.file_format, opts.data_prefix))
 
-		# Scratch table used for JVM warmup
-        cmd("%s/bin/hadoop distcp /user/shark/benchmark/rankings " \
-           "/user/shark/benchmark/scratch" % opts.hdfs)
+        # Scratch table used for JVM warmup
+        cmd("%s/bin/hadoop distcp /user/shark/benchmark/rankings/ " \
+            "/user/shark/benchmark/scratch/" % opts.hdfs)
 
         print "=== CREATING HIVE TABLES FOR BENCHMARK ==="
 
     cmd("%s/bin/spark-sql --master %s -e \"DROP TABLE IF EXISTS rankings; " \
-			"CREATE EXTERNAL TABLE rankings (pageURL STRING, pageRank INT, " \
-			"avgDuration INT) ROW FORMAT DELIMITED FIELDS TERMINATED BY \\\",\\\" " \
-			"STORED AS TEXTFILE LOCATION \\\"/user/shark/benchmark/rankings\\\";\"" %
-			(opts.spark, opts.spark_master))
+        "CREATE EXTERNAL TABLE rankings (pageURL STRING, pageRank INT, " \
+        "avgDuration INT) ROW FORMAT DELIMITED FIELDS TERMINATED BY \\\",\\\" " \
+        "STORED AS TEXTFILE LOCATION \\\"/user/shark/benchmark/rankings\\\";\"" %
+        (opts.spark, opts.spark_master))
 
     cmd("%s/bin/spark-sql --master %s -e \"DROP TABLE IF EXISTS scratch; " \
-			"CREATE EXTERNAL TABLE scratch (pageURL STRING, pageRank INT, " \
-			"avgDuration INT) ROW FORMAT DELIMITED FIELDS TERMINATED BY \\\",\\\" " \
-			"STORED AS TEXTFILE LOCATION \\\"/user/shark/benchmark/scratch\\\";\"" %
-			(opts.spark, opts.spark_master))
+        "CREATE EXTERNAL TABLE scratch (pageURL STRING, pageRank INT, " \
+        "avgDuration INT) ROW FORMAT DELIMITED FIELDS TERMINATED BY \\\",\\\" " \
+        "STORED AS TEXTFILE LOCATION \\\"/user/shark/benchmark/scratch\\\";\"" %
+        (opts.spark, opts.spark_master))
 
     cmd("%s/bin/spark-sql --master %s -e \"DROP TABLE IF EXISTS uservisits; " \
-			"CREATE EXTERNAL TABLE uservisits (sourceIP STRING,destURL STRING," \
-			"visitDate STRING,adRevenue DOUBLE,userAgent STRING,countryCode STRING," \
-			"languageCode STRING,searchWord STRING,duration INT ) " \
-			"ROW FORMAT DELIMITED FIELDS TERMINATED BY \\\",\\\" " \
-			"STORED AS TEXTFILE LOCATION \\\"/user/shark/benchmark/uservisits\\\";\"" %
-			(opts.spark, opts.spark_master))
+        "CREATE EXTERNAL TABLE uservisits (sourceIP STRING,destURL STRING," \
+        "visitDate STRING,adRevenue DOUBLE,userAgent STRING,countryCode STRING," \
+        "languageCode STRING,searchWord STRING,duration INT ) " \
+        "ROW FORMAT DELIMITED FIELDS TERMINATED BY \\\",\\\" " \
+        "STORED AS TEXTFILE LOCATION \\\"/user/shark/benchmark/uservisits\\\";\"" %
+        (opts.spark, opts.spark_master))
 
     cmd("%s/bin/spark-sql --master %s -e \"DROP TABLE IF EXISTS documents; " \
-			"CREATE EXTERNAL TABLE documents (line STRING) STORED AS TEXTFILE " \
-    		"LOCATION \\\"/user/shark/benchmark/crawl\\\";\"" %
-			(opts.spark, opts.spark_master))
+        "CREATE EXTERNAL TABLE documents (line STRING) STORED AS TEXTFILE " \
+        "LOCATION \\\"/user/shark/benchmark/crawl\\\";\"" %
+        (opts.spark, opts.spark_master))
 
     print "=== FINISHED CREATING BENCHMARK DATA ==="
-
 
 def main():
     opts = parse_args()
