@@ -380,7 +380,10 @@ def main():
         os.mkdir("./tmp/")
 
     opts = parse_args()
+    start_t = time.time()
     run_spark_sql(opts)
+    end_t = time.time()
+    print("###Total Time: ", end_t - start_t)
 
 
 if __name__ == "__main__":
