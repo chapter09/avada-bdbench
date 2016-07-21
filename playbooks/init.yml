@@ -15,6 +15,11 @@
             dest=/home/ubuntu/ 
             mode=750
 
+    - name: Copy monitoring daemon
+      copy: src=/home/ubuntu/avada-ML/redis_to_file.py 
+            dest=/home/ubuntu/ 
+            mode=750
+
     - name: Flush local redis data
       shell: "redis-cli flushall"
       async: 45
