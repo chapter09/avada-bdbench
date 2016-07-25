@@ -49,7 +49,7 @@ QUERY_3c_HQL = QUERY_3a_HQL.replace("1980-04-01", "2010-01-01")
 QUERY_4_HQL = """DROP TABLE IF EXISTS url_counts_partial;
                  CREATE TABLE url_counts_partial AS
                    SELECT TRANSFORM (line)
-                   USING "python /root/url_count.py" as (sourcePage,
+                   USING "python ./url_count.py" as (sourcePage,
                      destPage, count) from documents;
                  DROP TABLE IF EXISTS url_counts_total;
                  CREATE TABLE url_counts_total AS
