@@ -49,7 +49,7 @@ QUERY_3c_HQL = QUERY_3a_HQL.replace("1980-04-01", "2010-01-01")
 QUERY_4_HQL = """DROP TABLE IF EXISTS url_counts_partial;
                  CREATE TABLE url_counts_partial AS
                    SELECT TRANSFORM (line)
-                   USING "python ./url_count.py" as (sourcePage,
+                   USING "python /home/ubuntu/url_count.py" as (sourcePage,
                      destPage, count) from documents;
                  DROP TABLE IF EXISTS url_counts_total;
                  CREATE TABLE url_counts_total AS
@@ -60,7 +60,7 @@ QUERY_4_HQL = " ".join(QUERY_4_HQL.replace("\n", "").split())
 QUERY_4_HQL_HIVE_UDF = """DROP TABLE IF EXISTS url_counts_partial;
                  CREATE TABLE url_counts_partial AS
                    SELECT TRANSFORM (line)
-                   USING "python /tmp/url_count.py" as (sourcePage,
+                   USING "python /home/ubuntu/url_count.py" as (sourcePage,
                      destPage, count) from documents;
                  DROP TABLE IF EXISTS url_counts_total;
                  CREATE TABLE url_counts_total AS
@@ -384,6 +384,7 @@ def main():
     run_spark_sql(opts)
     end_t = time.time()
     print("###Total Time: ", end_t - start_t)
+    print start_t, end_t
 
 
 if __name__ == "__main__":

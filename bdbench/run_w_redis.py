@@ -1,4 +1,4 @@
-#!/bin/python
+#!/usr/bin/python
 __author__ = "www.haow.ca"
 
 # require: ansible
@@ -14,14 +14,14 @@ import time
 import datetime
 
 BASE_DIR = "~/monitor/"
-MASTER = ""
+MASTER = "ec2-54-174-214-131.compute-1.amazonaws.com"
 
 
 def parse_args():
     parser = ArgumentParser(usage="run.py [options]")
 
     parser.add_argument("--node", dest="node", type=str, default="worker",  
-                        help="collect results from which host (default: all)")
+                        help="collect results from which host (default: worker)")
     parser.add_argument("-q", "--query-num", default="1a", 
                         help="Which query to run in benchmark")
     parser.add_argument("-n", "--trial-num", default="1", 
@@ -63,11 +63,11 @@ def pre_run(opts, prefix):
 
         # create remote monitor directory
         print "----Create remote monitor directory----"
-        ansible_exe(opts.node, "mkdir -p %s/{{inventory_hostname}}" % (
+        ansible_exe(opts.node, "mkdir -p %s/" % (
            BASE_DIR + prefix))
 
         print "----Launch monitoring daemon----"
-        ansible_exe(opts.node, "./monitor_daemon.py &")
+        ansible_exe(opts.node, "python /home/ubuntu/monitor_daemon.py &")
 
     except subprocess.CalledProcessError as e:
         return e.returncode
@@ -76,11 +76,12 @@ def pre_run(opts, prefix):
 def post_run(opts, prefix, start_time, end_time):
     # kill monitor daemon
     print "----Kill monitor daemon process----"
-    ansible_exe(opts.node, "pkill monitor_daemon.py")
+    ansible_exe(opts.node, "sudo pkill python")
 
     # parse data from redis-server
-    cmd = "./redis_to_file.py -s %s -e %s -d {{ inventory_hostname }} -q % s" \
-        % (start_time, end_time, opts.query_num)
+    cmd = ("python /home/ubuntu/redis_to_file.py -s %s"
+            " -e %s -d {{ inventory_hostname }} -q % s") \
+                    % (start_time, end_time, opts.query_num)
     ansible_exe(opts.node, cmd)
 
     # remote fetch
@@ -105,10 +106,6 @@ def run(opts):
     prefix = str(time.time()).split(".")[0]
     pre_run(opts, prefix)
 
-    start_time = prefix
-    cmd = "python avada-ML/monitor-daemon.py"
-    ansible_exe(opts.node, cmd)
-    
     print "----Run Spark SQL query %s----" % opts.query_num
     run_query = ("python run_query.py"
                  " --spark-master spark://%s:7077" 
@@ -121,10 +118,6 @@ def run(opts):
     print "----Finish Spark SQL query----"
     end_time = str(time.time()).split(".")[0]
 
-    for p in monitor_proc:
-        print "Killing: \"%s\"" % run_monitor[monitor_proc.index(p)]
-        os.killpg(os.getpgid(p.pid), signal.SIGKILL)
-    
     print start_time, end_time
     post_run(opts, prefix, start_time, end_time)
 
@@ -135,7 +128,7 @@ def main():
         run(opts)
     except KeyboardInterrupt:
         print "Ctrl-C interrupt, kill all monitoring processes"
-        ansible_exe(opts.node, "sudo killall iostat nethogs jvmtop.sh")
+        ansible_exe(opts.node, "sudo pkill python")
 
 
 if __name__ == "__main__":
