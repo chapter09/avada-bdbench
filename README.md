@@ -1,3 +1,16 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [avada-bench](#avada-bench)
+    - [Requirements](#requirements)
+    - [How to start?](#how-to-start)
+    - [Prepare the dataset from Amazon S3](#prepare-the-dataset-from-amazon-s3)
+    - [Run the benchmark scripts and collect monitoring data](#run-the-benchmark-scripts-and-collect-monitoring-data)
+    - [How to parse the results](#how-to-parse-the-results)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # avada-bench
 Scripts for running Big Data Benchmark on existing Spark SQL cluster
 
