@@ -68,6 +68,8 @@ target/
 .ipynb_checkpoints
 
 
-metastore_db/
-workload/
-results/
+bdbench/metastore_db/
+bdbench/workload/
+bdbench/results/
+bdbench/logs/
+bdbench/tmp/

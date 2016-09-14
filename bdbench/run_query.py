@@ -183,7 +183,7 @@ def parse_args():
                         default=False,
                         help="Clear disk buffer cache between query runs")
 
-    parser.add_argument("--num-trials", type=int, default=10,
+    parser.add_argument("--num-trials", type=int, default=1,
                         help="Number of trials to run for this query")
     parser.add_argument("--prefix", type=str, default="",
                         help="Prefix result files with this string")

@@ -75,6 +75,7 @@ def prepare_spark_sql(opts):
             "/user/shark/benchmark/" % ( \
                 opts.hdfs, opts.file_format, opts.data_prefix))
 
+
         cmd("%s/bin/hadoop distcp " \
             "s3n://big-data-benchmark/pavlo/%s/%s/crawl/ " \
             "/user/shark/benchmark/" % ( \
@@ -110,7 +111,7 @@ def prepare_spark_sql(opts):
         "ROW FORMAT DELIMITED FIELDS TERMINATED BY \\\",\\\" " \
         "STORED AS TEXTFILE LOCATION \\\"/user/shark/benchmark/uservisits\\\";\"" %
         (opts.spark, opts.spark_master))
-
+    
     cmd("%s/bin/spark-sql --master %s -e \"DROP TABLE IF EXISTS documents; " \
         "CREATE EXTERNAL TABLE documents (line STRING) STORED AS TEXTFILE " \
         "LOCATION \\\"/user/shark/benchmark/crawl\\\";\"" %
