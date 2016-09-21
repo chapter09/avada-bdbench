@@ -63,45 +63,65 @@ def cmd(command):
 
 def prepare_spark_sql(opts):
 
-    if not opts.skip_s3_import:
-        print "=== IMPORTING BENCHMARK DATA FROM S3 ==="
+    def distcp(subdir, num):
         try:
-            cmd("%s/bin/hdfs dfs -mkdir /user/shark/benchmark", opts.hdfs)
+            cmd("%s/bin/hdfs dfs -mkdir /user/sql/benchmark/%s/" % 
+                (opts.hdfs, subdir))
         except Exception:
             pass  # Folder may already exist        
 
-        cmd("%s/bin/hadoop distcp " \
-            "s3n://big-data-benchmark/pavlo/%s/%s/rankings/ " \
-            "/user/shark/benchmark/" % ( \
-                opts.hdfs, opts.file_format, opts.data_prefix))
+        for i in range(0, num + 1):
+            #cmd("%s/bin/hdfs dfs -mkdir /user/sql/benchmark/%s/part-%05d" %  
+            #    (opts.hdfs, subdir, num))
+            cmd("%s/bin/hadoop distcp " \
+                "s3n://big-data-benchmark/pavlo/text/1node/%s/part-%05d " \
+                "/user/sql/benchmark/%s/" % (
+                    opts.hdfs, subdir, i, subdir))
 
 
-        cmd("%s/bin/hadoop distcp " \
-            "s3n://big-data-benchmark/pavlo/%s/%s/crawl/ " \
-            "/user/shark/benchmark/" % ( \
-                opts.hdfs, opts.file_format, opts.data_prefix))
+    if not opts.skip_s3_import:
+        print "=== IMPORTING BENCHMARK DATA FROM S3 ==="
+        try:
+            cmd("%s/bin/hdfs dfs -mkdir /user/sql/benchmark/", opts.hdfs)
+        except Exception:
+            pass  # Folder may already exist        
 
-        cmd("%s/bin/hadoop distcp " \
-            "s3n://big-data-benchmark/pavlo/%s/%s/uservisits/ " \
-            "/user/shark/benchmark/" % ( \
-                opts.hdfs, opts.file_format, opts.data_prefix))
+        #cmd("%s/bin/hadoop distcp " \
+        #    "s3n://big-data-benchmark/pavlo/%s/%s/rankings/ " \
+        #    "/user/shark/benchmark/" % ( \
+        #        opts.hdfs, opts.file_format, opts.data_prefix))
+
+        distcp('rankings', 20)
+        distcp('crawl', 15)
+        distcp('uservisits', 30)
+
+        #cmd("%s/bin/hadoop distcp " \
+        #    "s3n://big-data-benchmark/pavlo/%s/%s/crawl/ " \
+        #    "/user/shark/benchmark/" % ( \
+        #        opts.hdfs, opts.file_format, opts.data_prefix))
+
+        #cmd("%s/bin/hadoop distcp " \
+        #    "s3n://big-data-benchmark/pavlo/%s/%s/uservisits/ " \
+        #    "/user/shark/benchmark/" % ( \
+        #        opts.hdfs, opts.file_format, opts.data_prefix))
+
 
         # Scratch table used for JVM warmup
-        cmd("%s/bin/hadoop distcp /user/shark/benchmark/rankings/ " \
-            "/user/shark/benchmark/scratch/" % opts.hdfs)
+        cmd("%s/bin/hadoop distcp /user/sql/benchmark/rankings " \
+            "/user/sql/benchmark/scratch" % opts.hdfs)
 
         print "=== CREATING HIVE TABLES FOR BENCHMARK ==="
 
     cmd("%s/bin/spark-sql --master %s -e \"DROP TABLE IF EXISTS rankings; " \
         "CREATE EXTERNAL TABLE rankings (pageURL STRING, pageRank INT, " \
         "avgDuration INT) ROW FORMAT DELIMITED FIELDS TERMINATED BY \\\",\\\" " \
-        "STORED AS TEXTFILE LOCATION \\\"/user/shark/benchmark/rankings\\\";\"" %
+        "STORED AS TEXTFILE LOCATION \\\"/user/sql/benchmark/rankings\\\";\"" %
         (opts.spark, opts.spark_master))
 
     cmd("%s/bin/spark-sql --master %s -e \"DROP TABLE IF EXISTS scratch; " \
         "CREATE EXTERNAL TABLE scratch (pageURL STRING, pageRank INT, " \
         "avgDuration INT) ROW FORMAT DELIMITED FIELDS TERMINATED BY \\\",\\\" " \
-        "STORED AS TEXTFILE LOCATION \\\"/user/shark/benchmark/scratch\\\";\"" %
+        "STORED AS TEXTFILE LOCATION \\\"/user/sql/benchmark/scratch\\\";\"" %
         (opts.spark, opts.spark_master))
 
     cmd("%s/bin/spark-sql --master %s -e \"DROP TABLE IF EXISTS uservisits; " \
@@ -109,12 +129,12 @@ def prepare_spark_sql(opts):
         "visitDate STRING,adRevenue DOUBLE,userAgent STRING,countryCode STRING," \
         "languageCode STRING,searchWord STRING,duration INT ) " \
         "ROW FORMAT DELIMITED FIELDS TERMINATED BY \\\",\\\" " \
-        "STORED AS TEXTFILE LOCATION \\\"/user/shark/benchmark/uservisits\\\";\"" %
+        "STORED AS TEXTFILE LOCATION \\\"/user/sql/benchmark/uservisits\\\";\"" %
         (opts.spark, opts.spark_master))
     
     cmd("%s/bin/spark-sql --master %s -e \"DROP TABLE IF EXISTS documents; " \
         "CREATE EXTERNAL TABLE documents (line STRING) STORED AS TEXTFILE " \
-        "LOCATION \\\"/user/shark/benchmark/crawl\\\";\"" %
+        "LOCATION \\\"/user/sql/benchmark/crawl\\\";\"" %
         (opts.spark, opts.spark_master))
 
     print "=== FINISHED CREATING BENCHMARK DATA ==="

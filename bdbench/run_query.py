@@ -379,6 +379,12 @@ def main():
     if not os.path.exists("./tmp/"):
         os.mkdir("./tmp/")
 
+    if not os.path.exists("./results/"):
+        os.mkdir("./results/")
+
+    if not os.path.exists("./results/"):
+        os.mkdir("./results/")
+
     opts = parse_args()
     start_t = time.time()
     run_spark_sql(opts)
