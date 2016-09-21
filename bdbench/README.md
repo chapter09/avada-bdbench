@@ -22,7 +22,7 @@ Scripts for running Big Data Benchmark on existing Spark SQL cluster
     python prepare_benchmark.py --spark-master spark://SPARK_HOME:7077 -n 1
   
 ### Only run the benchmark scripts
-    python run.py -q 1a 
+    python run_query.py --spark-master spark://10.8.3.3:7077 -q 2a
 
 ### Run the benchmark scripts and collect monitoring data
     python run.py -q 1a 
