@@ -315,8 +315,11 @@ def run_spark_sql(opts):
         print "Query %s : Trial %i" % (opts.query_num, i + 1)
         cmd("sh %s" % local_query_file)
         content = open(result_file).readlines()
-        all_times = map(lambda x: float(
-            x.split(": ")[1].split(" ")[0]), content)
+        try:
+            all_times = map(lambda x: float(
+                x.split(": ")[1].split(" ")[0]), content)
+        except ValueError:
+            pass
 
         if '4' in opts.query_num:
             query_times = all_times[-4:]
