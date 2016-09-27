@@ -65,7 +65,7 @@ def prepare_spark_sql(opts):
 
     def distcp(subdir, num):
         try:
-            cmd("%s/bin/hdfs dfs -mkdir /user/sql/benchmark/%s/" % 
+            cmd("%s/bin/hdfs dfs -mkdir -p /user/sql/benchmark/%s/" % 
                 (opts.hdfs, subdir))
         except Exception:
             pass  # Folder may already exist        
@@ -82,7 +82,7 @@ def prepare_spark_sql(opts):
     if not opts.skip_s3_import:
         print "=== IMPORTING BENCHMARK DATA FROM S3 ==="
         try:
-            cmd("%s/bin/hdfs dfs -mkdir /user/sql/benchmark/", opts.hdfs)
+            cmd("%s/bin/hdfs dfs -mkdir -p /user/sql/benchmark/", opts.hdfs)
         except Exception:
             pass  # Folder may already exist        
 
