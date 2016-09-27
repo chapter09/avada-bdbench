@@ -310,8 +310,8 @@ def run_spark_sql(opts):
     contents = []
 
     for i in range(opts.num_trials):
-        print "Stopping Executors on Slaves....."
-        # ensure_spark_stopped_on_slaves(slaves)
+        #print "Stopping Executors on Slaves....."
+        # ensure_spark_stopped_on_slaves(slaves), which may work for multiple trials
         print "Query %s : Trial %i" % (opts.query_num, i + 1)
         cmd("sh %s" % local_query_file)
         content = open(result_file).readlines()
