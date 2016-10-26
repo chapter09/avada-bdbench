@@ -39,8 +39,8 @@
 # sleep 10
 #done
 
-for i in $(seq 1 1 15) 
+for i in $(seq 1 1 30) 
 do
- python run_query.py --spark-master spark://$MASTER:7077 -q 4 --num-trial 1 
- sleep 10
+ python run_query.py --spark-master spark://10.2.3.5:7077 -q 3a
+ sleep 20
 done

@@ -15,6 +15,7 @@ SCALE_FACTOR_MAP = {
 		10: "10nodes"
 		}
 
+OFFSET = 0
 
 def parse_args():
 	parser = ArgumentParser(usage="prepare_benchmark.py [options]")
@@ -91,7 +92,7 @@ def prepare_spark_sql(opts):
         #    "/user/shark/benchmark/" % ( \
         #        opts.hdfs, opts.file_format, opts.data_prefix))
 
-        distcp('rankings', 20)
+        distcp('rankings', 10)
         distcp('crawl', 15)
         distcp('uservisits', 30)
 
