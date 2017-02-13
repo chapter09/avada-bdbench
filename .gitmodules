@@ -1,3 +1,3 @@
 [submodule "tpch-spark"]
 	path = tpch-spark
-	url = ./tpch-spark
+	url = https://github.com/chapter09/tpch-spark.git 
